@@ -3,6 +3,11 @@
 abstract class BugzillaOutput {
 
     public $response;
+    public $title;
+    public $config;
+    public $error;
+    public $query;
+    public $template;
 
     public function __construct($config, $options, $title='') {
         $this->title    = $title;
