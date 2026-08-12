@@ -176,7 +176,13 @@ abstract class BugzillaBaseQuery
             $this->cached = false;
 
             $this->_fetch_by_options();
-            $cache->set($key, base64_encode(serialize($this->data)), $wgBugzillaCacheTimeOut * 60);
+
+            // Caching a failed query would serve its empty result to every
+            // later reader for the whole timeout, with no error attached to
+            // explain it.
+            if (!$this->error) {
+                $cache->set($key, base64_encode(serialize($this->data)), $wgBugzillaCacheTimeOut * 60);
+            }
 
             return $this->data;
         } else {

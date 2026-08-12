@@ -74,7 +74,11 @@ class BugzillaNumber extends BugzillaOutput {
     }
 
     function render() {
-        return '<span>'.count($this->query->data['bugs']).'</span>';
+        if( $this->query->error ) {
+            return $this->_render_error($this->query->error);
+        }
+
+        return '<span>'.count($this->query->data['bugs'] ?? []).'</span>';
     }
 }
 
