@@ -5,6 +5,7 @@
 
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Message\Message;
+use MediaWiki\Registration\ExtensionRegistry;
 
 // Factory class
 class BugzillaQuery
@@ -299,11 +300,10 @@ class BugzillaRESTQuery extends BugzillaBaseQuery
 
     public function user_agent()
     {
-        global $wgBugzillaExtVersion;
-        global $wgVersion;
+        $credits = ExtensionRegistry::getInstance()->getAllThings();
 
-        return 'MediawikiBugzilla/' . $wgBugzillaExtVersion
-            . ' MediaWiki/' . $wgVersion
+        return 'MediawikiBugzilla/' . ($credits['Bugzilla']['version'] ?? 'unknown')
+            . ' MediaWiki/' . MW_VERSION
             . ' PHP/' . PHP_VERSION;
     }
 

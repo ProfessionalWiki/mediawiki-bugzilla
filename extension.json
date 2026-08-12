@@ -1,0 +1,101 @@
+{
+	"name": "Bugzilla",
+	"version": "1.1.0",
+	"author": "Christian Legnitto",
+	"url": "https://github.com/mozilla/mediawiki-bugzilla",
+	"descriptionmsg": "bugzilla-desc",
+	"license-name": "MPL-2.0",
+	"type": "parserhook",
+	"requires": {
+		"MediaWiki": ">= 1.43.0"
+	},
+	"AutoloadClasses": {
+		"Bugzilla": "Bugzilla.class.php",
+		"BugzillaHooks": "BugzillaHooks.class.php",
+		"BugzillaOutput": "BugzillaOutput.class.php",
+		"BugzillaNumber": "BugzillaOutput.class.php",
+		"BugzillaBugListing": "BugzillaOutput.class.php",
+		"BugzillaList": "BugzillaOutput.class.php",
+		"BugzillaTable": "BugzillaOutput.class.php",
+		"BugzillaQuery": "BugzillaQuery.class.php",
+		"BugzillaBaseQuery": "BugzillaQuery.class.php",
+		"BugzillaRESTQuery": "BugzillaQuery.class.php",
+		"BugzillaJSONRPCQuery": "BugzillaQuery.class.php",
+		"BugzillaXMLRPCQuery": "BugzillaQuery.class.php"
+	},
+	"MessagesDirs": {
+		"Bugzilla": [
+			"i18n"
+		]
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "",
+		"remoteExtPath": "Bugzilla"
+	},
+	"ResourceModules": {
+		"ext.Bugzilla": {
+			"scripts": [
+				"web/js/jquery.dataTables.js"
+			],
+			"styles": [
+				"web/css/demo_page.css",
+				"web/css/demo_table.css",
+				"web/css/bugzilla.css"
+			]
+		}
+	},
+	"HookHandlers": {
+		"main": {
+			"class": "BugzillaHooks"
+		}
+	},
+	"Hooks": {
+		"BeforePageDisplay": "main",
+		"ParserFirstCallInit": "main"
+	},
+	"config": {
+		"BugzillaRESTURL": {
+			"value": "https://bugzilla.mozilla.org/rest",
+			"description": "Base URL of the Bugzilla REST API to query."
+		},
+		"BugzillaURL": {
+			"value": "https://bugzilla.mozilla.org",
+			"description": "Base URL of the Bugzilla installation, used to build links to bugs and to the full query."
+		},
+		"BugzillaTagName": {
+			"value": "bugzilla",
+			"description": "Wikitext tag name the extension registers."
+		},
+		"BugzillaMethod": {
+			"value": "REST",
+			"description": "Query method: REST, XML-RPC or JSON-RPC."
+		},
+		"BugzillaCacheTimeOut": {
+			"value": 5,
+			"description": "Minutes to cache query results in the main object cache."
+		},
+		"BugzillaJqueryTable": {
+			"value": true,
+			"description": "Enhance rendered tables with the bundled DataTables plugin."
+		},
+		"BugzillaDefaultFields": {
+			"value": [
+				"id",
+				"summary",
+				"priority",
+				"status"
+			],
+			"description": "Bug fields to request and display when the query does not set include_fields.",
+			"merge_strategy": "provide_default"
+		},
+		"BugzillaTable": {
+			"value": {
+				"pageSize": 10,
+				"lengthMenu": "[[10, 25, 50, 100, -1], [10, 25, 50, 100, \"All\"]]"
+			},
+			"description": "DataTables pagination options. lengthMenu is a raw JavaScript literal.",
+			"merge_strategy": "provide_default"
+		}
+	},
+	"manifest_version": 2
+}
