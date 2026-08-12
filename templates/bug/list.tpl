@@ -3,7 +3,7 @@
         $base = dirname(__FILE__) . '/../../templates/fields/';
 
         foreach( $response->bugs as $bug ) {
-            echo "<li class='bugzilla-status-${bug['status']}'>";
+            echo "<li class='bugzilla-status-{$bug['status']}'>";
             $count = 0;
             foreach( $response->fields as $field ) {
                 if( $count ) {

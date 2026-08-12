@@ -48,7 +48,7 @@
                         $verified++;
                     }
 
-                    echo "<tr class='bugzilla-status-${bug['status']}'>";
+                    echo "<tr class='bugzilla-status-{$bug['status']}'>";
                 } else {
                     echo "<tr class='bugzilla-status-none'>";
                 }
