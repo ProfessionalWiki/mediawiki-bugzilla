@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use MediaWiki\MediaWikiServices;
+
 // Factory class
 class BugzillaQuery
 {
@@ -276,7 +278,7 @@ class BugzillaRESTQuery extends BugzillaBaseQuery
     {
 
         // Add the requested query options to the request
-        $ua = MWHttpRequest::factory($this->url . '?'
+        $ua = MediaWikiServices::getInstance()->getHttpRequestFactory()->create($this->url . '?'
             . $this->_build_querystring($this->options),
             [
                 'method' => 'GET',
@@ -353,10 +355,10 @@ class BugzillaJSONRPCQuery extends BugzillaBaseQuery
         $query = json_encode($params, true);
         $url = $this->url . "?method=$method&params=[" . urlencode($query) . "]";
 
-        $req = MWHttpRequest::factory($url, array(
+        $req = MediaWikiServices::getInstance()->getHttpRequestFactory()->create($url, array(
                 'sslVerifyHost' => false,
                 'sslVerifyCert' => false
-            )
+            ), __METHOD__
         );
         $status = $req->execute();
 
@@ -412,7 +414,7 @@ class BugzillaXMLRPCQuery extends BugzillaBaseQuery
 </methodCall>
 X;
 
-        $ua = MWHttpRequest::factory($this->url, [
+        $ua = MediaWikiServices::getInstance()->getHttpRequestFactory()->create($this->url, [
             'method' => 'POST',
             'follow_redirects' => true,
             // TODO: Not sure if I should do this
