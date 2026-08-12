@@ -9,8 +9,7 @@ __Please note that there are still big outstanding bugs!__
 Requirements
 ================================
 
-* MediaWiki 1.17 or above.
-* For charting, requires <a href="http://libgd.bitbucket.org/">gd</a>
+* MediaWiki 1.43 or above.
 
 Installation
 ================================
@@ -22,8 +21,9 @@ Please substitute your installation path if it is different*
 2. Check the project out into `/path/to/your/mediawiki/extensions/Bugzilla`
 3. Edit `/path/to/your/mediawiki/LocalSettings.php` and add
    `require_once("$IP/extensions/Bugzilla/Bugzilla.php");`
-   and change/override any configuration variables.
-   Current configuration variables and their defaults can be found at the end of `Bugzilla.php`
+   and change/override any configuration variables. Set them *after* the
+   `require_once`: Bugzilla.php assigns its own defaults at the end of the
+   file, so anything set before it is discarded.
 
 Usage
 ================================
@@ -46,9 +46,11 @@ Options
 
 Valid bugzilla tag options are:
 
-* type: ``"bug"`` or ``"count"`` (defaults to bug)
+* type: ``"bug"`` (defaults to bug). ``"count"`` rendered a chart and has had
+  no template since graphing support was removed; it now reports an error.
 * For type bug:
-    * display: ``"table"`` or ``"list"`` or `"count"` (defaults to table)
+    * display: ``"table"`` or ``"list"`` or ``"number"`` (defaults to table).
+      Any other value falls back to table.
 * stats: ``"show"`` or ``"hide"`` (defaults to "show")
 
 
