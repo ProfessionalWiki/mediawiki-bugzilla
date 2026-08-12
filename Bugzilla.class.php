@@ -26,7 +26,6 @@ class Bugzilla {
         $classes = [
             'list'   => 'List',
             'number' => 'Number',
-            'inline' => 'Inline',
             'table'  => 'Table',
         ];
         if (!array_key_exists($theconfig['display'], $classes)) {
