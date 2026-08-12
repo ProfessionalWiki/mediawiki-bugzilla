@@ -27,6 +27,16 @@ class BugzillaQuery
 abstract class BugzillaBaseQuery
 {
 
+    public $type;
+    public $title;
+    public $url;
+    public $id;
+    public $error;
+    public $data;
+    public $synthetic_fields;
+    public $cached;
+    public $options;
+
     public function __construct($type, $options, $title)
     {
         global $wgBugzillaDefaultFields;
@@ -317,6 +327,8 @@ class BugzillaRESTQuery extends BugzillaBaseQuery
  */
 class BugzillaJSONRPCQuery extends BugzillaBaseQuery
 {
+
+    public $rawData;
 
     function __construct($type, $options, $title = '')
     {
