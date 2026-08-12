@@ -20,10 +20,11 @@ Please substitute your installation path if it is different*
 1. Install the requirements above
 2. Check the project out into `/path/to/your/mediawiki/extensions/Bugzilla`
 3. Edit `/path/to/your/mediawiki/LocalSettings.php` and add
-   `require_once("$IP/extensions/Bugzilla/Bugzilla.php");`
-   and change/override any configuration variables. Set them *after* the
-   `require_once`: Bugzilla.php assigns its own defaults at the end of the
-   file, so anything set before it is discarded.
+   `wfLoadExtension( 'Bugzilla' );`
+   and change/override any configuration variables.
+   Current configuration variables and their defaults can be found in the
+   `config` block of `extension.json`. They may be set before or after the
+   `wfLoadExtension` call.
 
 Usage
 ================================
