@@ -11,26 +11,6 @@ class BugzillaHooks implements BeforePageDisplayHook, ParserFirstCallInitHook {
 
     public function onBeforePageDisplay( $out, $skin ): void {
         global $wgScriptPath;
-        global $wgBugzillaJqueryTable;
-        global $wgBugzillaTable;
-
-        if( $wgBugzillaJqueryTable ) {
-            // RLQ defers until jQuery and mw.loader are available; the tag
-            // renderer is what puts ext.Bugzilla in the queue, so pages
-            // without a tag find no table and stop before requiring it.
-            $out->addInlineScript('(window.RLQ = window.RLQ || []).push(function() {
-            $(function() {
-            if( !$("table.bugzilla").length ) { return; }
-            mw.loader.using("ext.Bugzilla").then(function() {
-            $("table.bugzilla").dataTable({
-            "bJQueryUI": true,
-            "aLengthMenu": ' . $wgBugzillaTable['lengthMenu'] . ',
-            "iDisplayLength" : ' . $wgBugzillaTable['pageSize'] . ',
-            /* Disable initial sort */
-            "aaSorting": [],
-            })})})});'
-            );
-        }
 
         // Let the user optionally override bugzilla extension styles
         if( file_exists("$wgScriptPath/extensions/Bugzilla/web/css/custom.css") ) {
@@ -51,6 +31,7 @@ class BugzillaHooks implements BeforePageDisplayHook, ParserFirstCallInitHook {
 
     // Function to be called when our tag is found by the parser
     public static function render( $input, array $args, Parser $parser, $frame=null ) {
+        global $wgBugzillaJqueryTable;
 
         // We don't want the page to be cached
         // TODO: Not sure if we need this
@@ -69,11 +50,26 @@ class BugzillaHooks implements BeforePageDisplayHook, ParserFirstCallInitHook {
         // DataTables plugin.
         $parser->getOutput()->addModules( [ 'ext.Bugzilla' ] );
 
+        if( $wgBugzillaJqueryTable ) {
+            $parser->getOutput()->setJsConfigVar( 'wgBugzillaTable', self::_table_options() );
+        }
+
         // Create a new bugzilla object
         $bz = Bugzilla::create($args, $input, $parser->getTitle());
 
         // Show the desired output (or an error if there was one)
         $bz->fetch();
         return $bz->render();
+    }
+
+    protected static function _table_options() {
+        global $wgBugzillaTable;
+
+        return [
+            'pageSize'   => $wgBugzillaTable['pageSize'],
+            // DataTables wants the array itself, and the setting has always
+            // held it as a literal for interpolation into JavaScript.
+            'lengthMenu' => json_decode( $wgBugzillaTable['lengthMenu'], true ),
+        ];
     }
 }
