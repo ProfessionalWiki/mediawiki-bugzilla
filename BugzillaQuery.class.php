@@ -167,8 +167,9 @@ abstract class BugzillaBaseQuery
         }
 
         $key = implode(':', ['mediawiki', 'bugzilla', 'bugs', sha1(serialize($this->id()))]);
-        // TODO: since 1.43; use ObjectCacheFactory::getInstance instead.
-        $cache = ObjectCache::getInstance($wgMainCacheType);
+        $cache = MediaWikiServices::getInstance()
+            ->getObjectCacheFactory()
+            ->getInstance($wgMainCacheType);
         $row = $cache->get($key);
 
         if ($row === false) {
@@ -306,11 +307,10 @@ class BugzillaRESTQuery extends BugzillaBaseQuery
             if (200 == $ua->getStatus()) {
                 $this->data = json_decode($ua->getContent(), TRUE);
             } else {
-                $errors = $response->getStatusValue()->getErrors();
-                $this->error = $errors[0];
+                $this->error = $response->getMessage(false, false, 'en')->text();
                 return;
             }
-        } catch (MWException $e) {
+        } catch (Exception $e) {
             $this->error = $e->getMessage();
             return;
         }
@@ -458,11 +458,10 @@ X;
                     $this->data['bugs'][] = $bug;
                 }
             } else {
-                $errors = $response->getStatusValue()->getErrors();
-                $this->error = $errors[0];
+                $this->error = $response->getMessage(false, false, 'en')->text();
                 return;
             }
-        } catch (MWException $e) {
+        } catch (Exception $e) {
             $this->error = $e->getMessage();
             return;
         }
