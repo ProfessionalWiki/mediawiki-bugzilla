@@ -35,7 +35,8 @@
 	"ResourceModules": {
 		"ext.Bugzilla": {
 			"scripts": [
-				"web/js/jquery.dataTables.js"
+				"web/js/jquery.dataTables.js",
+				"web/js/bugzilla.init.js"
 			],
 			"styles": [
 				"web/css/demo_page.css",
@@ -93,7 +94,7 @@
 				"pageSize": 10,
 				"lengthMenu": "[[10, 25, 50, 100, -1], [10, 25, 50, 100, \"All\"]]"
 			},
-			"description": "DataTables pagination options. lengthMenu is a raw JavaScript literal.",
+			"description": "DataTables pagination options. lengthMenu is a JSON array literal, passed through to DataTables as aLengthMenu.",
 			"merge_strategy": "provide_default"
 		}
 	},
