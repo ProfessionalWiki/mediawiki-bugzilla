@@ -123,6 +123,18 @@ and b) display those columns.
 
 ![Screenshot of the above](http://i.imgur.com/p3u7r.png "Screenshot of the above")
 
+Tests
+================================
+
+Unit and integration tests run through MediaWiki core's PHPUnit entry point,
+from the MediaWiki install directory:
+
+```
+composer phpunit:entrypoint -- extensions/Bugzilla/tests/phpunit
+```
+
+`composer test` at the extension root runs the linter and code sniffer only.
+
 Limitations
 ================================
 
