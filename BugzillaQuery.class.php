@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Message\Message;
 
 // Factory class
 class BugzillaQuery
@@ -244,6 +245,22 @@ abstract class BugzillaBaseQuery
         $cache->set($this->id(), base64_encode(serialize($this->data)));
     }
 
+    /**
+     * The most specific message a failed request carries, as a single line.
+     * Status::getMessage() would combine every message into a wikitext bullet
+     * list, which the parser then renders as a list inside the error box.
+     */
+    protected function _status_error($status): string
+    {
+        $messages = $status->getMessages();
+
+        if (!$messages) {
+            return 'The Bugzilla request failed.';
+        }
+
+        return Message::newFromSpecifier($messages[0])->inLanguage('en')->text();
+    }
+
     public function full_query_url(): string
     {
         global $wgBugzillaURL;
@@ -312,8 +329,16 @@ class BugzillaRESTQuery extends BugzillaBaseQuery
             $response = $ua->execute();
             if (200 == $ua->getStatus()) {
                 $this->data = json_decode($ua->getContent(), TRUE);
+
+                // A proxy or captive portal answering 200 with HTML decodes
+                // to null, which otherwise reads downstream as zero bugs.
+                if (!is_array($this->data)) {
+                    $this->data = array();
+                    $this->error = 'Bugzilla returned a response that is not valid JSON.';
+                    return;
+                }
             } else {
-                $this->error = $response->getMessage(false, false, 'en')->text();
+                $this->error = $this->_status_error($response);
                 return;
             }
         } catch (Exception $e) {
@@ -464,7 +489,7 @@ X;
                     $this->data['bugs'][] = $bug;
                 }
             } else {
-                $this->error = $response->getMessage(false, false, 'en')->text();
+                $this->error = $this->_status_error($response);
                 return;
             }
         } catch (Exception $e) {
