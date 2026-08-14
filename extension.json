@@ -94,8 +94,8 @@
 				"pageSize": 10,
 				"lengthMenu": "[[10, 25, 50, 100, -1], [10, 25, 50, 100, \"All\"]]"
 			},
-			"description": "DataTables pagination options. lengthMenu is a JSON array literal, passed through to DataTables as aLengthMenu.",
-			"merge_strategy": "provide_default"
+			"description": "DataTables pagination options. lengthMenu is passed through to DataTables as aLengthMenu, either as an array or as a JSON array literal.",
+			"merge_strategy": "array_plus"
 		}
 	},
 	"manifest_version": 2

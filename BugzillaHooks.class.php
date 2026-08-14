@@ -65,11 +65,14 @@ class BugzillaHooks implements BeforePageDisplayHook, ParserFirstCallInitHook {
     protected static function _table_options() {
         global $wgBugzillaTable;
 
+        $lengthMenu = $wgBugzillaTable['lengthMenu'];
+
         return [
             'pageSize'   => $wgBugzillaTable['pageSize'],
-            // DataTables wants the array itself, and the setting has always
-            // held it as a literal for interpolation into JavaScript.
-            'lengthMenu' => json_decode( $wgBugzillaTable['lengthMenu'], true ),
+            // DataTables wants the array itself. The setting has always held it
+            // as a literal for interpolation into JavaScript, but an array is
+            // the shape it describes, so accept either.
+            'lengthMenu' => is_array( $lengthMenu ) ? $lengthMenu : json_decode( $lengthMenu, true ),
         ];
     }
 }
