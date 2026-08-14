@@ -48,4 +48,44 @@ class BugzillaOutputTest extends MediaWikiIntegrationTestCase
         $this->assertStringNotContainsString('<script>', $rendered);
         $this->assertStringContainsString('&lt;script&gt;', $rendered);
     }
+
+    /**
+     * Field names come from the tag's JSON, so any page editor picks them. Tag output
+     * reaches the reader through the strip state, which MediaWiki does not sanitize.
+     *
+     * @dataProvider displayProvider
+     */
+    public function testAFieldNameCannotBreakOutOfTheAttributeItIsRenderedIn($display)
+    {
+        $rendered = $this->renderWithField($display, "id' onmouseover='alert(1)");
+
+        $this->assertStringNotContainsString("id' onmouseover=", $rendered);
+    }
+
+    /**
+     * @dataProvider displayProvider
+     */
+    public function testAFieldNameWithNoValueOnTheBugIsEscaped($display)
+    {
+        $rendered = $this->renderWithField($display, '<script>alert(1)</script>');
+
+        $this->assertStringNotContainsString('<script>', $rendered);
+    }
+
+    public static function displayProvider()
+    {
+        return [
+            'table' => ['table'],
+            'list' => ['list'],
+        ];
+    }
+
+    private function renderWithField(string $display, string $field): string
+    {
+        $output = Bugzilla::create([ 'display' => $display ], '{"product": "Bugzilla"}', 'title');
+        $output->query->options['include_fields'] = ['status', $field];
+        $output->query->data = ['bugs' => [['status' => 'NEW']]];
+
+        return $output->render();
+    }
 }
