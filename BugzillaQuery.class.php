@@ -217,7 +217,9 @@ abstract class BugzillaBaseQuery
         } else {
             $options = json_decode($query_options_raw, true);
 
-            if ($options === null) {
+            // Anything that is not an object of query options, including the
+            // scalars that decode successfully.
+            if (!is_array($options)) {
                 $this->error = 'Query options must be valid JSON.';
                 return $options;
             }

@@ -95,6 +95,29 @@ class BugzillaQueryTest extends MediaWikiIntegrationTestCase
     }
 
     /**
+     * Valid JSON, but not the object of query options the tag body is meant to
+     * hold. Reported rather than fataling the page.
+     *
+     * @dataProvider nonObjectBodyProvider
+     */
+    public function testATagBodyThatIsNotAJsonObjectIsReportedAsAnError($body)
+    {
+        $q = BugzillaQuery::create('bug', $body, 'title');
+
+        $this->assertSame('Query options must be valid JSON.', $q->error);
+    }
+
+    public static function nonObjectBodyProvider()
+    {
+        return [
+            'a number' => ['123'],
+            'a quoted string' => ['"product"'],
+            'true' => ['true'],
+            'false' => ['false'],
+        ];
+    }
+
+    /**
      * @dataProvider rebaseFieldsProvider
      */
     public function testRebaseFields($request, $synthetic, $expected)
