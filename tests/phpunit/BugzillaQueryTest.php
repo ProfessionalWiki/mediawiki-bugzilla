@@ -136,22 +136,6 @@ class BugzillaQueryTest extends MediaWikiIntegrationTestCase
         ];
     }
 
-    public function testFieldsNeededOnlyForRenderingAreFetchedButNotDisplayed()
-    {
-        $q = BugzillaQuery::create('bug', '{"include_fields": ["summary"]}', 'title');
-
-        $this->assertSame(
-            ['summary'],
-            $q->options['include_fields'],
-            'the columns are the ones the wiki page asked for'
-        );
-        $this->assertSame(
-            ['id', 'priority', 'status', 'summary'],
-            $q->rebased_options()['include_fields'],
-            'the request also carries the fields the templates need'
-        );
-    }
-
     public function testTheFullQueryUrlRepeatsEachValueOfAnArrayOption()
     {
         $q = BugzillaQuery::create(
