@@ -48,12 +48,12 @@
                         $verified++;
                     }
 
-                    echo "<tr class='bugzilla-status-{$bug['status']}'>";
+                    echo "<tr class='bugzilla-status-" . htmlspecialchars($bug['status']) . "'>";
                 } else {
                     echo "<tr class='bugzilla-status-none'>";
                 }
                 foreach( $response->fields as $field ) {
-                    echo "<td class='bugzilla-data-$field'>";
+                    echo "<td class='bugzilla-data-" . htmlspecialchars($field) . "'>";
 
                     // Get our template path
                     $subtemplate = $base .
