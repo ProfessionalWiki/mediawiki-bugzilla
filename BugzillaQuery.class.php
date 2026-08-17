@@ -315,7 +315,7 @@ class BugzillaRESTQuery extends BugzillaBaseQuery
 
         // Add the requested query options to the request
         $ua = MediaWikiServices::getInstance()->getHttpRequestFactory()->create($this->url . '?'
-            . $this->_build_querystring($this->options),
+            . $this->_build_querystring($this->rebased_options()),
             [
                 'method' => 'GET',
                 'follow_redirects' => true,
