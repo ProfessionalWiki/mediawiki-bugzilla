@@ -72,20 +72,37 @@ class BugzillaRESTQueryTest extends MediaWikiIntegrationTestCase
         );
     }
 
-    public function testTheRequestAsksBugzillaForTheFieldsThePageAskedFor()
+    /**
+     * The templates render id, priority and status whatever the page asked to
+     * display, so the request has to carry them.
+     */
+    public function testTheRequestCarriesTheFieldsTheTemplatesNeed()
     {
-        $requestedUrl = null;
-        $this->installMockHttp(function ($url) use (&$requestedUrl) {
-            $requestedUrl = $url;
-            return $this->makeFakeHttpRequest(json_encode(self::BUGS));
-        });
+        $this->assertSame(
+            'https://bugzilla.example.org/rest/bug'
+                . '?include_fields=id&include_fields=priority'
+                . '&include_fields=status&include_fields=summary',
+            $this->requestUrlFor('{"include_fields": ["summary"]}')
+        );
+    }
 
-        BugzillaQuery::create('bug', '{"include_fields": ["summary"]}', 'title')->fetch();
+    /**
+     * The cache key is computed over the fields a query ends up fetching, so
+     * queries that share an entry have to be asking Bugzilla for the same
+     * thing. Otherwise whichever renders first decides what every later reader
+     * sees, and a page gets a result that is missing the fields it displays.
+     */
+    public function testQueriesThatShareACacheEntryFetchTheSameFields()
+    {
+        $narrow = '{"product": "P", "include_fields": ["summary"]}';
+        $wide = '{"product": "P", "include_fields": ["id", "summary", "priority", "status"]}';
 
         $this->assertSame(
-            'https://bugzilla.example.org/rest/bug?include_fields=summary',
-            $requestedUrl
+            BugzillaQuery::create('bug', $narrow, 'title')->id(),
+            BugzillaQuery::create('bug', $wide, 'title')->id(),
+            'these two share a cache entry'
         );
+        $this->assertSame($this->requestUrlFor($narrow), $this->requestUrlFor($wide));
     }
 
     private function queryAnswering(string $body, int $status = 200): BugzillaBaseQuery
@@ -93,5 +110,18 @@ class BugzillaRESTQueryTest extends MediaWikiIntegrationTestCase
         $this->installMockHttp($this->makeFakeHttpRequest($body, $status));
 
         return BugzillaQuery::create('bug', self::OPTIONS, 'title');
+    }
+
+    private function requestUrlFor(string $options): string
+    {
+        $requestedUrl = null;
+        $this->installMockHttp(function ($url) use (&$requestedUrl) {
+            $requestedUrl = $url;
+            return $this->makeFakeHttpRequest(json_encode(self::BUGS));
+        });
+
+        BugzillaQuery::create('bug', $options, 'title')->fetch();
+
+        return $requestedUrl;
     }
 }
