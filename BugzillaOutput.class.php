@@ -3,6 +3,11 @@
 abstract class BugzillaOutput {
 
     public $response;
+    public $title;
+    public $config;
+    public $error;
+    public $query;
+    public $template;
 
     public function __construct($config, $options, $title='') {
         $this->title    = $title;
@@ -69,7 +74,11 @@ class BugzillaNumber extends BugzillaOutput {
     }
 
     function render() {
-        return '<span>'.count($this->query->data['bugs']).'</span>';
+        if( $this->query->error ) {
+            return $this->_render_error($this->query->error);
+        }
+
+        return '<span>'.count($this->query->data['bugs'] ?? []).'</span>';
     }
 }
 

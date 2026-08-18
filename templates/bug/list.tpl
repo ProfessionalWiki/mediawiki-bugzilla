@@ -3,13 +3,13 @@
         $base = dirname(__FILE__) . '/../../templates/fields/';
 
         foreach( $response->bugs as $bug ) {
-            echo "<li class='bugzilla-status-${bug['status']}'>";
+            echo "<li class='bugzilla-status-" . htmlspecialchars($bug['status'] ?? 'none') . "'>";
             $count = 0;
             foreach( $response->fields as $field ) {
                 if( $count ) {
                     echo " - ";
                 }
-                echo "<span class='bugzilla-data-$field'>";
+                echo "<span class='bugzilla-data-" . htmlspecialchars($field) . "'>";
 
                 // Get our template path
                 $subtemplate = $base . 
@@ -25,7 +25,7 @@
                 }
 
                 // Print out the data
-                $data = $bug[$field];
+                $data = $bug[$field] ?? 'n/a';
                 require($subtemplate);
 
                 echo "</span>";

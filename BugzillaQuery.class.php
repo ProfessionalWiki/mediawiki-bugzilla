@@ -3,6 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use MediaWiki\MediaWikiServices;
+use MediaWiki\Message\Message;
+use MediaWiki\Registration\ExtensionRegistry;
+
 // Factory class
 class BugzillaQuery
 {
@@ -24,6 +28,16 @@ class BugzillaQuery
 // Base class
 abstract class BugzillaBaseQuery
 {
+
+    public $type;
+    public $title;
+    public $url;
+    public $id;
+    public $error;
+    public $data;
+    public $synthetic_fields;
+    public $cached;
+    public $options;
 
     public function __construct($type, $options, $title)
     {
@@ -155,15 +169,22 @@ abstract class BugzillaBaseQuery
         }
 
         $key = implode(':', ['mediawiki', 'bugzilla', 'bugs', sha1(serialize($this->id()))]);
-        // TODO: since 1.43; use ObjectCacheFactory::getInstance instead.
-        $cache = ObjectCache::getInstance($wgMainCacheType);
+        $cache = MediaWikiServices::getInstance()
+            ->getObjectCacheFactory()
+            ->getInstance($wgMainCacheType);
         $row = $cache->get($key);
 
         if ($row === false) {
             $this->cached = false;
 
             $this->_fetch_by_options();
-            $cache->set($key, base64_encode(serialize($this->data)), $wgBugzillaCacheTimeOut * 60);
+
+            // Caching a failed query would serve its empty result to every
+            // later reader for the whole timeout, with no error attached to
+            // explain it.
+            if (!$this->error) {
+                $cache->set($key, base64_encode(serialize($this->data)), $wgBugzillaCacheTimeOut * 60);
+            }
 
             return $this->data;
         } else {
@@ -196,7 +217,9 @@ abstract class BugzillaBaseQuery
         } else {
             $options = json_decode($query_options_raw, true);
 
-            if ($options === null) {
+            // Anything that is not an object of query options, including the
+            // scalars that decode successfully.
+            if (!is_array($options)) {
                 $this->error = 'Query options must be valid JSON.';
                 return $options;
             }
@@ -223,6 +246,22 @@ abstract class BugzillaBaseQuery
     {
         $cache = $this->_getCache();
         $cache->set($this->id(), base64_encode(serialize($this->data)));
+    }
+
+    /**
+     * The most specific message a failed request carries, as a single line.
+     * Status::getMessage() would combine every message into a wikitext bullet
+     * list, which the parser then renders as a list inside the error box.
+     */
+    protected function _status_error($status): string
+    {
+        $messages = $status->getMessages();
+
+        if (!$messages) {
+            return 'The Bugzilla request failed.';
+        }
+
+        return Message::newFromSpecifier($messages[0])->inLanguage('en')->text();
     }
 
     public function full_query_url(): string
@@ -263,11 +302,10 @@ class BugzillaRESTQuery extends BugzillaBaseQuery
 
     public function user_agent()
     {
-        global $wgBugzillaExtVersion;
-        global $wgVersion;
+        $credits = ExtensionRegistry::getInstance()->getAllThings();
 
-        return 'MediawikiBugzilla/' . $wgBugzillaExtVersion
-            . ' MediaWiki/' . $wgVersion
+        return 'MediawikiBugzilla/' . ($credits['Bugzilla']['version'] ?? 'unknown')
+            . ' MediaWiki/' . MW_VERSION
             . ' PHP/' . PHP_VERSION;
     }
 
@@ -276,8 +314,8 @@ class BugzillaRESTQuery extends BugzillaBaseQuery
     {
 
         // Add the requested query options to the request
-        $ua = MWHttpRequest::factory($this->url . '?'
-            . $this->_build_querystring($this->options),
+        $ua = MediaWikiServices::getInstance()->getHttpRequestFactory()->create($this->url . '?'
+            . $this->_build_querystring($this->rebased_options()),
             [
                 'method' => 'GET',
                 'follow_redirects' => true,
@@ -293,12 +331,19 @@ class BugzillaRESTQuery extends BugzillaBaseQuery
             $response = $ua->execute();
             if (200 == $ua->getStatus()) {
                 $this->data = json_decode($ua->getContent(), TRUE);
+
+                // A proxy or captive portal answering 200 with HTML decodes
+                // to null, which otherwise reads downstream as zero bugs.
+                if (!is_array($this->data)) {
+                    $this->data = array();
+                    $this->error = 'Bugzilla returned a response that is not valid JSON.';
+                    return;
+                }
             } else {
-                $errors = $response->getStatusValue()->getErrors();
-                $this->error = $errors[0];
+                $this->error = $this->_status_error($response);
                 return;
             }
-        } catch (MWException $e) {
+        } catch (Exception $e) {
             $this->error = $e->getMessage();
             return;
         }
@@ -315,6 +360,8 @@ class BugzillaRESTQuery extends BugzillaBaseQuery
  */
 class BugzillaJSONRPCQuery extends BugzillaBaseQuery
 {
+
+    public $rawData;
 
     function __construct($type, $options, $title = '')
     {
@@ -353,10 +400,10 @@ class BugzillaJSONRPCQuery extends BugzillaBaseQuery
         $query = json_encode($params, true);
         $url = $this->url . "?method=$method&params=[" . urlencode($query) . "]";
 
-        $req = MWHttpRequest::factory($url, array(
+        $req = MediaWikiServices::getInstance()->getHttpRequestFactory()->create($url, array(
                 'sslVerifyHost' => false,
                 'sslVerifyCert' => false
-            )
+            ), __METHOD__
         );
         $status = $req->execute();
 
@@ -412,7 +459,7 @@ class BugzillaXMLRPCQuery extends BugzillaBaseQuery
 </methodCall>
 X;
 
-        $ua = MWHttpRequest::factory($this->url, [
+        $ua = MediaWikiServices::getInstance()->getHttpRequestFactory()->create($this->url, [
             'method' => 'POST',
             'follow_redirects' => true,
             // TODO: Not sure if I should do this
@@ -444,11 +491,10 @@ X;
                     $this->data['bugs'][] = $bug;
                 }
             } else {
-                $errors = $response->getStatusValue()->getErrors();
-                $this->error = $errors[0];
+                $this->error = $this->_status_error($response);
                 return;
             }
-        } catch (MWException $e) {
+        } catch (Exception $e) {
             $this->error = $e->getMessage();
             return;
         }

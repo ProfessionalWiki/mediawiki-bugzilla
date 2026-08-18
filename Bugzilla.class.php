@@ -3,9 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-$dir = dirname(__FILE__);
-require_once ($dir . '/BugzillaOutput.class.php');
-
 // Factory
 class Bugzilla {
 
@@ -26,7 +23,6 @@ class Bugzilla {
         $classes = [
             'list'   => 'List',
             'number' => 'Number',
-            'inline' => 'Inline',
             'table'  => 'Table',
         ];
         if (!array_key_exists($theconfig['display'], $classes)) {

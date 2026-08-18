@@ -9,8 +9,7 @@ __Please note that there are still big outstanding bugs!__
 Requirements
 ================================
 
-* MediaWiki 1.17 or above.
-* For charting, requires <a href="http://libgd.bitbucket.org/">gd</a>
+* MediaWiki 1.43 or above.
 
 Installation
 ================================
@@ -21,9 +20,11 @@ Please substitute your installation path if it is different*
 1. Install the requirements above
 2. Check the project out into `/path/to/your/mediawiki/extensions/Bugzilla`
 3. Edit `/path/to/your/mediawiki/LocalSettings.php` and add
-   `require_once("$IP/extensions/Bugzilla/Bugzilla.php");`
+   `wfLoadExtension( 'Bugzilla' );`
    and change/override any configuration variables.
-   Current configuration variables and their defaults can be found at the end of `Bugzilla.php`
+   Current configuration variables and their defaults can be found in the
+   `config` block of `extension.json`. They may be set before or after the
+   `wfLoadExtension` call.
 
 Usage
 ================================
@@ -46,9 +47,11 @@ Options
 
 Valid bugzilla tag options are:
 
-* type: ``"bug"`` or ``"count"`` (defaults to bug)
+* type: ``"bug"`` (defaults to bug). ``"count"`` rendered a chart and has had
+  no template since graphing support was removed; it now reports an error.
 * For type bug:
-    * display: ``"table"`` or ``"list"`` or `"count"` (defaults to table)
+    * display: ``"table"`` or ``"list"`` or ``"number"`` (defaults to table).
+      Any other value falls back to table.
 * stats: ``"show"`` or ``"hide"`` (defaults to "show")
 
 
@@ -119,6 +122,18 @@ and b) display those columns.
     </bugzilla>
 
 ![Screenshot of the above](http://i.imgur.com/p3u7r.png "Screenshot of the above")
+
+Tests
+================================
+
+Unit and integration tests run through MediaWiki core's PHPUnit entry point,
+from the MediaWiki install directory:
+
+```
+composer phpunit:entrypoint -- extensions/Bugzilla/tests/phpunit
+```
+
+`composer test` at the extension root runs the linter and code sniffer only.
 
 Limitations
 ================================
